@@ -1,0 +1,55 @@
+---Trigger xóa sản phẩm sẽ tự động xóa sản phẩm trong giỏ hàng và đơn hàng 
+CREATE TRIGGER Delete_cart_order_from_product
+AFTER DELETE on tbl_product
+FOR EACH ROW
+BEGIN
+DELETE FROM tbl_cart WHERE tbl_cart.productId = OLD.productId ;
+DELETE FROM tbl_order WHERE tbl_order.productId = OLD.productId ;
+END;
+
+----Store Lấy danh sách sản phẩm theo category (xong)
+DELIMITER $$
+CREATE PROCEDURE GetListItemByCategory(catId int)
+BEGIN
+SELECT c.catName,p.productName,p.product_desc,p.price 
+  FROM tbl_category c 
+  JOIN tbl_product p on c.catId = p.catId
+  WHERE c.catId = catId;
+END $$
+
+bảng category:  $query = "CALL GetListItemByCategory($id)" ( dòng 91);
+
+---Store lấy chi tiết sản phẩm 
+DELIMITER $$
+CREATE PROCEDURE GetDetailProductById(product_id int)
+BEGIN
+    SELECT A.productName,A.product_desc,A.price,A.image,B.brandName,C.catName
+    FROM tbl_product A 
+    LEFT JOIN tbl_brand B on A.brandId = B.brandId
+    LEFT JOIN tbl_category C ON A.catId = C.catId
+    WHERE a.productId = product_id;
+END $$
+ CALL  GetDetailProductById(24); 
+bảng product  $query = "CALL GetDetailProductById($idProduct)" ( dòng 162);
+
+--View hiển thị toàn bộ danh sách sản phẩm có trong database 
+DELIMITER $$
+CREATE VIEW GetListDataProduct AS
+SELECT p.productName,p.price,p.image,c.brandName,r.catName,p.product_desc
+FROM tbl_product p 
+JOIN tbl_brand c on c.brandId = p.brandId
+JOIN tbl_category r on r.catId = p.catId;
+
+bảng product: dòng 112: SELECT * FROM GetListDataProduct ; 
+
+
+--- store lấy danh sách sản đơn order theo ngày và trạng thái 
+DELIMITER $$
+CREATE PROCEDURE GetListDataOrder()
+BEGIN
+	SELECT productName,price,quantity,date_order,o.image,c.name,c.address,c.city,c.phone,c.email,o.status
+    FROM `tbl_order` o
+    LEFT JOIN tbl_customer c on c.id = o.customer_id;
+END $$
+viết trên sql: CALL GetListDataOrder();
+bảng cart: dòng 126:  $query = "CALL GetListDataOrder()";
